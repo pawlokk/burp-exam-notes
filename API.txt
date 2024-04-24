@@ -1,0 +1,89 @@
+look for documentation, possible paths:
+/api
+/swagger/index.html
+/openapi.json
+
+if you identify the resource endpoint /api/swagger/v1/users/123, then you should investigate the following paths:
+
+/api/swagger/v1
+/api/swagger
+/api
+
+You could also use a list of common paths to directly fuzz for documentation.
+
+ALSO
+remember about different HTTP methods: 
+OPTIONS, HEAD, TRACE - these might reveal additional or valid methods of accessing the API 
+
+correct formatting for JSON if the API wants an integer, do not put it inside of "" 
+
+{"price":0}
+NOT {"price":"0"}
+
+Pay attention to the responses, as sometimes, you can inject fields that weren't there before and the app will accept them, like so:
+
+GET /api/checkout returns:
+{"chosen_discount":{"percentage":0},"chosen_products":[]}
+
+and 
+POST /api/checkout generates this post data:
+{"chosen_products":[{"product_id":"1","quantity":1}]}
+
+
+send the second request to repeater, 
+and just add the chosen_discount parameter with the value 100 
+
+
+
+TOYING WITH PARAMETERS - an example
+if you think there might be an API behind a functionality, a JS present or something of sorts, try playing with parameters like so:
+
+place query syntax characters like #, &, and = in your input and observe how the application responds
+remember to URL encode those, as then they won't be processed by the frontend/backend, e.g. - & will get processed as a query string, where as if it's URL encoded, it will go through as part of the parameter - but the API will decode it, and treat it as an additional parameter 
+
+then, closely look at the responses, as they might reveal whether there is a hidden parameter 
+also do not hold  back from using Burp Intruder to bruteforce parameter names - or Param Miner with burp pro ... 
+
+Parameter pollution in a query string (or POST data ...)
+
+1. notice the POST /forgot-password request and the related /static/js/forgotPassword.js JavaScript file
+2. Change the value of the username parameter from administrator to an invalid username, such as administratorx. Send the request. Notice that this results in an Invalid username error message.
+3. Attempt to add a second parameter-value pair to the server-side request using a URL-encoded & character. For example, add URL-encoded &x=y:
+
+username=administrator%26x=y
+
+Send the request. Notice that this returns a Parameter is not supported error message. This suggests that the internal API may have interpreted &x=y as a separate parameter, instead of part of the username.
+Attempt to truncate the server-side query string using a URL-encoded # character:
+
+username=administrator%23
+
+Send the request. Notice that this returns a Field not specified error message. This suggests that the server-side query may include an additional parameter called field, which has been removed by the # character.
+Add a field parameter with an invalid value to the request. Truncate the query string after the added parameter-value pair. For example, add URL-encoded &field=x#:
+
+username=administrator%26field=x%23
+
+Send the request. Notice that this results in an Invalid field error message. This suggests that the server-side application may recognize the injected field parameter.
+Brute-force the value of the field parameter:
+
+Right-click the POST /forgot-password request and select Send to Intruder.
+In the Intruder tab, add a payload position to the value of the field parameter as follows:
+
+username=administrator%26field=§x§%23
+
+In Intruder > Payloads, click Add from list. Select the built-in Server-side variable names payload list, then start the attack.
+Review the results. Notice that the requests with the username and email payloads both return a 200 response.
+Change the value of the field parameter from x# to email:
+
+username=administrator%26field=email%23
+
+Send the request. Notice that this returns the original response. This suggests that email is a valid field type.
+review the /static/js/forgotPassword.js JavaScript file. Notice the password reset endpoint, which refers to the reset_token parameter:
+
+/forgot-password?reset_token=${resetToken}
+
+change the value of the field parameter from email to reset_token:
+
+username=administrator%26field=reset_token%23
+
+Send the request. Notice that this returns a password reset token.
+Use the token to reset the password and promote yourself to administrator

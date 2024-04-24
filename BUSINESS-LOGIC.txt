@@ -1,0 +1,7 @@
+
+
+    With Burp running, log in and buy any item that you can afford with your store credit.
+    Study the proxy history. Observe that when you place an order, the POST /cart/checkout request redirects you to an order confirmation page. Send GET /cart/order-confirmation?order-confirmation=true to Burp Repeater.
+    Add the leather jacket to your basket.
+    In Burp Repeater, resend the order confirmation request. Observe that the order is completed without the cost being deducted from your store credit and the lab is solved.
+

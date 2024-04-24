@@ -1,0 +1,3 @@
+first case is purchasing flow,
+basically, you send the request adding discount codes to repeater 20 times, group the requests and send them in parallel using a single packet
+this adds howeever many coupons you wish

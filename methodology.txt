@@ -1,0 +1,63 @@
+For everyone that's in the process of getting through the Portswigger Academy labs or preparing for the Certified Burp Practitioner; 
+following is somewhat of a mindmap, a methodology of what to test for based on present functionalities in the lab. This list comes without payloads or description of possible techniques, as it would make it very long. 
+
+Please use it as guidance for what to look for when dealing with mystery labs. 
+
+1. Look for functionalities: 
+
+a) authentication/login func
+- auth attacks; Burp Intruder, try response differences, enumerating valid accounts, time based indicators 
+- oauth attacks; study the flow, look for flaws and common exploits
+- passwd reset attacks; try injecting the exploit server as the Host: header, try other additional headers also
+- host header injection bypasses, etc.
+
+b) search func./ advanced search
+- xss; might be linked with CSRF 
+- sqli; not so common with search, more adv. search
+
+c) viewing blog posts
+- lfi; if only viewing the blog posts is possible, try looking for requests that include files, and traverse the path
+
+d) commenting on blog posts
+- xss; in the comment text, website, or user input
+- file upload; if there's file upload possible
+
+e) category filter 
+- sqli; the '?category=' parameter
+
+f) check stock func. 
+- XXE; depending on the data input method, even if POST req. with data and params
+- XSS; there might be vectors for XSS 
+- SQLI; linked with XML
+
+g) update e-mail
+- CSRF; study the cookies for CSRF defences
+
+h) submit feedback
+- OS command injection; most commonly in the e-mail parameter
+
+i) view details func., or other visible template
+- SSTI; use DOM Invader for possible vectors
+
+j) api calls, JS files that point to apis, POST with JSONs
+- IDOR; like modyfing the data that is returned
+- API vuln;
+- GRAPHQL vuln; learn to work with GraphQL in Burp, makes it much easier
+
+k) live chat
+- XSS; injecting js code, manipulating the handshake, etc.
+- CSRF; 
+
+
+2. No func.?
+- cookies, JWT, serialized obj. (PHP, Ruby, Java)
+- cache resp. header and poisoning
+- ssrf with Referer or other headers (X-Forwarded-Host:)
+- tracking cookie, blind sqli
+- http request smuggling; HTTP Request smuggler extension- must have
+- DOM based, reflected input - use DOM Invader with burp browser 
+- Access Control headers - CORS
+- CSRF of different forms 
+
+
+

